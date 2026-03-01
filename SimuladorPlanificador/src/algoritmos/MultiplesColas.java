@@ -74,14 +74,18 @@ public class MultiplesColas implements AlgoritmosPlanificacion {
                 List<Proceso> listaNivel = colas.get(nivel);
 
                 for (Proceso p : listaNivel) {
+                    // Si está bloqueado, intentamos desbloquearlo ANTES de evaluar si es el
+                    // candidato
+                    if (p.getEstado() == EstadoProceso.BLOQUEADO) {
+                        gi.intentarDesbloquear(p);
+                    }
+
+                    // Ahora sí evaluamos: puede ser que ya estuviera LISTO o que se
+                    // haya desbloqueado exitosamente justo arriba ^
                     if (p.getEstado() == EstadoProceso.LISTO) {
                         candidato = p;
                         nivelCandidato = nivel;
                         break;
-                    } else if (p.getEstado() == EstadoProceso.BLOQUEADO) {
-                        // Intentar desbloquearlo antes de seguir buscando
-                        gi.intentarDesbloquear(p);
-                        // Si se desbloqueó ahora ya es LISTO, lo tomamos en la siguiente iteración
                     }
                 }
 
@@ -112,6 +116,7 @@ public class MultiplesColas implements AlgoritmosPlanificacion {
 
             // 5. Ejecutar tick a tick
             boolean fueInterrumpido = false;
+            int ticksEjecutados = 0;
             for (int e = 0; e < tiempoEjecucion && sim.iteracionValida(); e++) {
 
                 // En cada tick, hay un 30% de probabilidad de que pida I/O y se bloquee.
@@ -128,10 +133,13 @@ public class MultiplesColas implements AlgoritmosPlanificacion {
                 candidato.setTiempoRestante(candidato.getTiempoRestante() - 1);
                 candidato.setTiempoUsoCPU(candidato.getTiempoUsoCPU() + 1);
                 sim.incrementarTiempo();
+                ticksEjecutados++;
             }
 
-            candidato.setVecesUsoCPU(candidato.getVecesUsoCPU() + 1);
-            sim.registrarCambioContexto();
+            if (ticksEjecutados > 0) {
+                candidato.setVecesUsoCPU(candidato.getVecesUsoCPU() + 1);
+                sim.registrarCambioContexto();
+            }
             colas.get(nivelCandidato).remove(candidato);
 
             // 6. Ver si terminó o si hay que bajarlo de cola
@@ -140,9 +148,18 @@ public class MultiplesColas implements AlgoritmosPlanificacion {
                 // Regla clásica de Feedback Queue: No se le penaliza bajándolo de cola,
                 // se queda en su mismo nivel, pero en estado BLOQUEADO.
                 colas.get(nivelCandidato).add(candidato);
+                // Si no ejecutó nada, avanzar el reloj 1 tick para evitar que el
+                // while gire indefinidamente sin progreso de tiempo
+                if (ticksEjecutados == 0) {
+                    sim.incrementarTiempo();
+                }
             } else if (candidato.getTiempoRestante() <= 0) {
                 candidato.setEstado(EstadoProceso.TERMINADO);
                 System.out.println("    -> P" + candidato.getId() + " termino en t=" + sim.tiempoActual);
+            } else if (!sim.iteracionValida()) {
+                // El tiempo global se agotó durante su ejecución, no es penalización
+                candidato.setEstado(EstadoProceso.LISTO);
+                colas.get(nivelCandidato).add(candidato);
             } else {
                 // Penalización: Agotó TODO su tiempo asignado en la CPU sin bloquearse y no
                 // terminó. Baja de cola.
