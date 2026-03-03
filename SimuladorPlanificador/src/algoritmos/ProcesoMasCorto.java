@@ -49,6 +49,7 @@ public class ProcesoMasCorto implements AlgoritmosPlanificacion {
                 if (elMasCorto.isPresent()) {
                     pActivo = elMasCorto.get();
                     pActivo.setEstado(EstadoProceso.EN_EJECUCION);
+                    pActivo.setVecesUsoCPU(pActivo.getVecesUsoCPU() + 1); // Registrar despacho para el reporte
                     sim.registrarCambioContexto();
                     System.out.println("  -> [DESPACHO] Entra a CPU: P" + pActivo.getId()
                             + " (Ráfaga restante: " + pActivo.getTiempoRestante() + ")");

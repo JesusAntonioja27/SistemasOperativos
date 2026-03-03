@@ -29,28 +29,27 @@ public class Main {
 
         // 3. Menú Interactivo de Consola
         int opcion = -1;
-        while (opcion < 1 || opcion > 10) {
+        while (opcion != 1 && opcion != 2 && opcion != 5 && opcion != 6) {
             System.out.println("\nSelecciona el algoritmo de planificación a simular:");
-            // System.out.println(" 1. Round Robin Apropiativo");
-            // System.out.println(" 2. Round Robin No Apropiativo");
+            System.out.println(" 1. Round Robin Apropiativo");
+            System.out.println(" 2. Round Robin No Apropiativo (FCFS)");
             // System.out.println(" 3. Prioridades Apropiativo");
             // System.out.println(" 4. Prioridades No Apropiativo");
             System.out.println(" 5. Múltiples Colas de Prioridad (Multi-level Feedback Queue)");
-            // System.out.println(" 6. Proceso Más Corto Primero (SJF)");
+            System.out.println(" 6. Proceso Más Corto Primero (SJF No Apropiativo)");
             // System.out.println(" 7. Planificación Garantizada");
             // System.out.println(" 8. Lotería Apropiativo");
             // System.out.println(" 9. Lotería No Apropiativo");
             // System.out.println("10. Participación Equitativa");
-            System.out.print("\nTu elección (Sólo el de Colas en fase de prueba) -> ");
+            System.out.print("\nTu elección (1, 2, 5 o 6) -> ");
 
             try {
-                // Validación para evitar que truene si ingresan letras
                 String inputStr = scanner.nextLine();
                 opcion = Integer.parseInt(inputStr);
 
-                if (opcion != 5) {
+                if (opcion != 1 && opcion != 2 && opcion != 5 && opcion != 6) {
                     System.out.println(
-                            "\n>>> [WARN] Por ahora, solo tenemos codificado Múltiples Colas (Opción 5). \n>>> Por favor, elige la 5.\n");
+                            "\n>>> [WARN] Opción no disponible. Elige entre: 1, 2, 5 o 6.\n");
                 }
             } catch (NumberFormatException e) {
                 System.out.println("\n>>> [ERROR] Por favor, ingresa un número válido.\n");
@@ -59,8 +58,17 @@ public class Main {
 
         // 4. Asignamos dependencias según Patrón Estrategia
         switch (opcion) {
+            case 1:
+                planif.setAlgoritmo(new RoundRobinAprop());
+                break;
+            case 2:
+                planif.setAlgoritmo(new RoundRobinNoAprop());
+                break;
             case 5:
                 planif.setAlgoritmo(new MultiplesColas());
+                break;
+            case 6:
+                planif.setAlgoritmo(new ProcesoMasCorto());
                 break;
             default:
                 System.out.println("Algoritmo aún no implementado.");
