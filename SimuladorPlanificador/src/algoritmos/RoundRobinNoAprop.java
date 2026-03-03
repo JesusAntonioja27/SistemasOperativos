@@ -76,6 +76,7 @@ public class RoundRobinNoAprop implements AlgoritmosPlanificacion {
                     // Doble validación en caso de que su estado haya mutado a otra cosa
                     if (nuevoP.getEstado() == EstadoProceso.LISTO && nuevoP.getTiempoRestante() > 0) {
                         nuevoP.setEstado(EstadoProceso.EN_EJECUCION);
+                        nuevoP.setVecesUsoCPU(nuevoP.getVecesUsoCPU() + 1); // Registrar despacho para el reporte
                         sim.registrarCambioContexto();
 
                         System.out.println("  -> [DESPACHO FIFO] Entra a CPU: P" + nuevoP.getId()

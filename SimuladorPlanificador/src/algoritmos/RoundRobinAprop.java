@@ -90,6 +90,7 @@ public class RoundRobinAprop implements AlgoritmosPlanificacion {
                     // Doble validación por seguridad
                     if (nuevoP.getEstado() == EstadoProceso.LISTO && nuevoP.getTiempoRestante() > 0) {
                         nuevoP.setEstado(EstadoProceso.EN_EJECUCION);
+                        nuevoP.setVecesUsoCPU(nuevoP.getVecesUsoCPU() + 1); // Registrar despacho para el reporte
                         sim.registrarCambioContexto();
                         quantumGastado = 0; // Se reinicia el contador al despachar un nuevo proceso
 

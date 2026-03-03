@@ -11,7 +11,7 @@ public class Main {
         System.out.println("            SIMULADOR DE PLANIFICADOR DE PROCESOS (OS)            ");
         System.out.println("==================================================================");
 
-        // 1. Instanciación de variables de entorno globales.
+        // 1. Instanciaci�n de variables de entorno globales.
         Simulacion sim = new Simulacion();
         GestorProcesos gestorP = new GestorProcesos();
         GestorInterrupciones gestorI = new GestorInterrupciones();
@@ -21,36 +21,54 @@ public class Main {
         // 2. Poblamos la lista de procesos inicial
         gestorP.inicializarProcesos(sim.tiempoActual);
 
-        // 3. Menú
+        // 3. Men�
         int opcion = -1;
         while (opcion < 1 || opcion > 10) {
-            System.out.println("\nSelecciona el algoritmo de planificación a simular:");
-            System.out.println(" 5. Múltiples Colas de Prioridad (Multi-level Feedback Queue)");
-            System.out.println(" 7. Planificación Garantizada");
-            System.out.println(" 8. Lotería Apropiativo");
+            System.out.println("\nSelecciona el algoritmo de planificaci�n a simular:");
+            System.out.println(" 1. Round Robin Apropiativo");
+            System.out.println(" 2. Round Robin No Apropiativo (FCFS)");
             System.out.println(" 3. Prioridades Apropiativo");
-            System.out.print("\nTu elección -> ");
+            System.out.println(" 4. Prioridades No Apropiativo");
+            System.out.println(" 5. M�ltiples Colas de Prioridad (Multi-level Feedback Queue)");
+            System.out.println(" 6. Proceso M�s Corto Primero (SJF No Apropiativo)");
+            System.out.println(" 7. Planificaci�n Garantizada");
+            System.out.println(" 8. Loter�a Apropiativo");
+            System.out.println(" 9. Loter�a No Apropiativo");
+            System.out.println("10. Participaci�n Equitativa");
+            System.out.print("\nTu elecci�n -> ");
 
             try {
                 String inputStr = scanner.nextLine();
                 opcion = Integer.parseInt(inputStr);
 
-                if (opcion != 5 && opcion != 7 && opcion != 8 && opcion != 3) {
-                    System.out.println("\n>>> [WARN] Elige una opción válida (3, 5, 7 u 8).\n");
+                if (opcion < 1 || opcion > 10) {
+                    System.out.println("\n>>> [WARN] Opci�n no disponible. Elige un n�mero entre 1 y 10.\n");
                     opcion = -1;
                 }
             } catch (NumberFormatException e) {
-                System.out.println("\n>>> [ERROR] Por favor, ingresa un número válido.\n");
+                System.out.println("\n>>> [ERROR] Por favor, ingresa un n�mero v�lido.\n");
             }
         }
 
-        // 4. Asignamos algoritmo según opción
+        // 4. Asignamos algoritmo seg�n opci�n
         switch (opcion) {
+            case 1:
+                planif.setAlgoritmo(new RoundRobinAprop());
+                break;
+            case 2:
+                planif.setAlgoritmo(new RoundRobinNoAprop());
+                break;
             case 3:
                 planif.setAlgoritmo(new PrioridadesAprop());
                 break;
+            case 4:
+                planif.setAlgoritmo(new PrioridadesNoAprop());
+                break;
             case 5:
                 planif.setAlgoritmo(new MultiplesColas());
+                break;
+            case 6:
+                planif.setAlgoritmo(new ProcesoMasCorto());
                 break;
             case 7:
                 planif.setAlgoritmo(new PlanificacionGarantizada());
@@ -58,8 +76,14 @@ public class Main {
             case 8:
                 planif.setAlgoritmo(new LoteriaAprop());
                 break;
+            case 9:
+                planif.setAlgoritmo(new LoteriaNoAprop());
+                break;
+            case 10:
+                planif.setAlgoritmo(new ParticipacionEquitativa());
+                break;
             default:
-                System.out.println("Algoritmo aún no implementado.");
+                System.out.println("Algoritmo a�n no implementado.");
                 return;
         }
 
