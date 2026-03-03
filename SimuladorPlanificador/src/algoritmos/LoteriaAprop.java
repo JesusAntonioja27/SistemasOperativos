@@ -10,14 +10,15 @@ import java.util.Optional;
  * 
  * Cada proceso posee un número de "boletos" (tickets).
  * En cada iteración:
- * 1. Se calcula el total de boletos disponibles entre procesos LISTOS/EN_EJECUCION.
+ * 1. Se calcula el total de boletos disponibles entre procesos
+ * LISTOS/EN_EJECUCION.
  * 2. Se genera un número aleatorio y se elige el "ganador" de la lotería.
  * 3. El ganador es despachado/continúa en la CPU.
  * 4. Es apropiativo: si otro proceso LISTO gana, el actual es expropiado.
  * 
  * Ventajas: Justo probabilísticamente, evita inanición.
  */
- public class LoteriaAprop implements AlgoritmosPlanificacion {
+public class LoteriaAprop implements AlgoritmosPlanificacion {
 
     private Random random = new Random();
 
@@ -97,7 +98,8 @@ import java.util.Optional;
         int acumulado = 0;
         for (Proceso p : candidatos) {
             acumulado += p.getBoletos();
-            if (numero <= acumulado) return p;
+            if (numero <= acumulado)
+                return p;
         }
         return candidatos.get(candidatos.size() - 1);
     }
