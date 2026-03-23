@@ -3,9 +3,10 @@ package clases;
 import java.util.Random;
 import java.util.List;
 import java.util.ArrayList;
+import ses.utils.PeticionDisco;
 
 /**
- * Encargada de poblar y retornar la tabla inyectada inicial (`PCB`).
+ * Encargada de poblar y retornar la tabla inyectada inicial ({@code PCB}).
  * Contiene el generador algorítmico principal (java.util.Random) que distribuye
  * las
  * probabilidades base para los atributos: Tiempos, Estados y Prioridades de
@@ -37,6 +38,7 @@ public class GestorProcesos {
     /**
      * Disparador masivo de procesos iniciales.
      * Deberá ser invocado con el tiempo inicial de la simulación (t=0).
+     * Para procesos que nacen BLOQUEADOS, se generan peticiones de disco aleatorias.
      *
      * @param tiempoActual El contador del reloj inicial donde nacen los procesos.
      */
@@ -69,6 +71,24 @@ public class GestorProcesos {
 
             // Inyección al modelo Base
             Proceso nuevo = new Proceso(i, tiempo, estado, prioridad, boletos, usuario, tiempoActual);
+
+            // Si el proceso nació BLOQUEADO, generar entre 1 y 5 peticiones de disco aleatorias
+            if (estado == EstadoProceso.BLOQUEADO) {
+                int numPeticiones = random.nextInt(5) + 1;
+                List<PeticionDisco> peticiones = new ArrayList<>();
+                List<Integer> sectoresUsados = new ArrayList<>();
+                for (int j = 0; j < numPeticiones; j++) {
+                    int sector;
+                    do {
+                        sector = random.nextInt(20) + 1; // [1-20]
+                    } while (sectoresUsados.contains(sector));
+                    sectoresUsados.add(sector);
+                    char tipo = (random.nextBoolean()) ? 'L' : 'E';
+                    peticiones.add(new PeticionDisco(sector, tipo, i));
+                }
+                nuevo.setPeticionesHHDD(peticiones);
+            }
+
             lista.add(nuevo);
         }
 

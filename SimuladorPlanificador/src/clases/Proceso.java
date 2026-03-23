@@ -1,5 +1,9 @@
 package clases;
 
+import java.util.List;
+import java.util.ArrayList;
+import ses.utils.PeticionDisco;
+
 /**
  * Representa la unidad fundamental del sistema: El Proceso.
  * Contiene todos los metadatos necesarios (PCB simulado) para que cualquier
@@ -69,6 +73,10 @@ public class Proceso {
      */
     private double proporcion;
 
+    // --- Atributos SES-HHDD ---
+    /** Lista de peticiones de disco duro pendientes para este proceso. */
+    private List<PeticionDisco> peticionesHHDD;
+
     /**
      * Constructor del Proceso.
      * Inicializa los atributos principales y establece métricas en cero.
@@ -98,6 +106,9 @@ public class Proceso {
         this.tiempoCreacion = tiempoActual;
         this.cpuDerecho = 0.0;
         this.proporcion = 0.0;
+
+        // Inicializar lista de peticiones de disco vacía
+        this.peticionesHHDD = new ArrayList<>();
     }
 
     // =========================================================================
@@ -239,6 +250,37 @@ public class Proceso {
 
     public void setProporcion(double proporcion) {
         this.proporcion = proporcion;
+    }
+
+    // =========================================================================
+    // GETTERS Y SETTERS — SES-HHDD
+    // =========================================================================
+
+    /**
+     * Obtiene la lista de peticiones de disco duro pendientes.
+     *
+     * @return Lista de peticiones de disco.
+     */
+    public List<PeticionDisco> getPeticionesHHDD() {
+        return peticionesHHDD;
+    }
+
+    /**
+     * Establece la lista de peticiones de disco duro pendientes.
+     *
+     * @param peticionesHHDD Nueva lista de peticiones.
+     */
+    public void setPeticionesHHDD(List<PeticionDisco> peticionesHHDD) {
+        this.peticionesHHDD = peticionesHHDD;
+    }
+
+    /**
+     * Indica si el proceso tiene peticiones de disco duro pendientes.
+     *
+     * @return true si tiene peticiones pendientes.
+     */
+    public boolean tienePeticionesHHDD() {
+        return peticionesHHDD != null && !peticionesHHDD.isEmpty();
     }
 
     @Override
