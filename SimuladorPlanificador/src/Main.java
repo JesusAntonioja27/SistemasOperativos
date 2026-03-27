@@ -14,7 +14,7 @@ public class Main {
         // 1. Instanciación de variables de entorno globales.
         Simulacion sim = new Simulacion();
         GestorProcesos gestorP = new GestorProcesos();
-        GestorInterrupciones gestorI = new GestorInterrupciones();
+        GestorInterrupciones gestorI = new GestorInterrupciones(scanner);
         Planificador planif = new Planificador();
         ReporteFinal reporte = new ReporteFinal();
 

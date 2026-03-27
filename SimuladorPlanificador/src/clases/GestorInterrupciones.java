@@ -1,36 +1,41 @@
 package clases;
 
-import java.util.Random;
+import ses.SES_HHDD;
+
+import java.util.Scanner;
 
 /**
  * Simula el comportamiento de E/S (Entrada/Salida) en un Sistema Operativo.
  * Trabaja específicamente sobre Procesos que se encuentran en estado BLOQUEADO.
  * <p>
- * Si el proceso tiene peticiones de disco pendientes, delega al subsistema
- * SES-HHDD para atenderlas. Si no tiene peticiones de disco, mantiene
- * la lógica aleatoria original de intentos de desbloqueo.
+ * Cuando un proceso bloqueado recibe tiempo de CPU, se activa el Subsistema
+ * de Entrada/Salida para Disco Duro (SES-HHDD) que atiende todas las
+ * peticiones de disco pendientes del proceso. Una vez atendidas, el proceso
+ * regresa a estado LISTO y el planificador continúa su ejecución normal.
  * </p>
  */
 public class GestorInterrupciones {
 
-    /** Generador de probabilidades para intentar el desbloqueo. */
-    private Random random;
+    /** Instancia del subsistema de E/S para disco duro. */
+    private SES_HHDD sesHHDD;
 
     /**
      * Constructor por defecto.
-     * Instancia el generador probabilístico.
+     * Instancia el subsistema SES-HHDD pasándole el scanner principal.
+     * 
+     * @param scanner Scanner principal para evitar conflictos de lectura.
      */
-    public GestorInterrupciones() {
-        this.random = new Random();
+    public GestorInterrupciones(Scanner scanner) {
+        this.sesHHDD = new SES_HHDD(scanner);
     }
 
     /**
-     * Intenta desbloquear un proceso.
-     * Si el proceso tiene peticiones de disco HHDD pendientes, delega al SES-HHDD.
-     * Si no, realiza hasta 3 intentos aleatorios de desbloqueo.
-     * 
-     * @param proceso El proceso cuya reactivación está siendo intentada.
-     * @return true si el proceso logró desbloquearse a LISTO; false si no pudo.
+     * Atiende las peticiones de disco de un proceso bloqueado mediante el SES-HHDD.
+     * El planificador se detiene, el SES-HHDD ejecuta el algoritmo de disco
+     * seleccionado, y al terminar el proceso regresa a estado LISTO.
+     *
+     * @param proceso El proceso bloqueado con peticiones de disco pendientes.
+     * @return true si el proceso fue atendido y desbloqueado correctamente.
      */
     public boolean intentarDesbloquear(Proceso proceso) {
 
@@ -38,35 +43,15 @@ public class GestorInterrupciones {
             return false;
         }
 
-        if (proceso.tienePeticionesHHDD()) {
-            // El proceso tiene peticiones de disco: delegar al SES-HHDD
-            System.out.println("  [I/O] P" + proceso.getId() + " tiene peticiones HHDD pendientes. Activando SES-HHDD...");
-            ses.SES_HHDD sesHhdd = new ses.SES_HHDD();
-            return sesHhdd.atenderProceso(proceso);
-        } else {
-            // Sin peticiones de disco: mantener lógica aleatoria original
-            int intentos = 0;
-            final int MAX_INTENTOS = 3;
+        // Activar el SES-HHDD para atender las peticiones de disco
+        // El SES-HHDD cambia el estado del proceso a LISTO al terminar
+        boolean atendido = sesHHDD.atenderProceso(proceso);
 
-            while (intentos < MAX_INTENTOS) {
-                System.out.println("  [I/O] Intento " + (intentos + 1) + " de desbloquear P" + proceso.getId());
-
-                if (random.nextInt(2) == 1) {
-                    proceso.setEstado(EstadoProceso.LISTO);
-                    System.out.println("  [I/O] P" + proceso.getId() + " desbloqueado, vuelve a LISTO.");
-                    return true;
-                }
-
-                System.out.println("  [I/O] P" + proceso.getId() + " sigue bloqueado.");
-                intentos++;
-            }
-
-            // 3 intentos fallidos: el proceso muere por inanición
-            System.out.println("  [INANICION] P" + proceso.getId() + " muere por inanicion.");
-            System.out.println();
-            proceso.forzarMuerte();
-
-            return false;
+        if (atendido) {
+            System.out.println("  [I/O] P" + proceso.getId()
+                    + " fue atendido por SES-HHDD, regresa a la cola de listos.");
         }
+
+        return atendido;
     }
 }

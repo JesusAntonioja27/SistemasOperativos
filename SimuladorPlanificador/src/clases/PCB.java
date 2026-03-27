@@ -3,7 +3,6 @@ package clases;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-import ses.utils.PeticionDisco;
 
 /**
  * Representa el Bloque de Control de Procesos Global (PCB).
@@ -93,35 +92,19 @@ public class PCB {
      * Muestra en la Standard Output (Consola) todos los procesos actuales del PCB,
      * de manera estructurada con ASCII Art para una lectura óptima por los
      * profesores.
-     * Incluye columna de peticiones de disco HHDD para procesos bloqueados.
+     * Formateado con tabs robustos.
      */
     public void mostrarTabla() {
-        System.out.println("╔════╦══════╦══════════════╦═══════╦═════════╦═════════╦══════╦════════════════════════════════╗");
-        System.out.println("║ ID ║TRest ║    Estado    ║ Prior ║ Boletos ║ Usuario ║VecCPU║ Peticiones HHDD                ║");
-        System.out.println("╠════╬══════╬══════════════╬═══════╬═════════╬═════════╬══════╬════════════════════════════════╣");
+        System.out.println("╔════════════════════════════════════════════════════════════════════════════════╗");
+        System.out.println("║                          TABLA DE CONTROL DE PROCESOS                        ║");
+        System.out.println("╠════╦══════╦══════════════╦═══════╦═════════╦═════════╦══════╦════════════════╣");
+        System.out.println("║ ID ║TRest ║    Estado    ║ Prior ║ Boletos ║ Usuario ║VecCPU║ Peticiones HHDD║");
+        System.out.println("╠════╬══════╬══════════════╬═══════╬═════════╬═════════╬══════╬════════════════╣");
 
         for (Proceso p : procesos) {
-            // Construir string de peticiones HHDD
-            String peticionesStr = "";
-            if (p.getEstado() == EstadoProceso.BLOQUEADO && p.tienePeticionesHHDD()) {
-                StringBuilder sb = new StringBuilder();
-                List<PeticionDisco> pets = p.getPeticionesHHDD();
-                for (int i = 0; i < pets.size(); i++) {
-                    PeticionDisco pet = pets.get(i);
-                    sb.append(pet.getSector()).append(pet.getTipo());
-                    if (i < pets.size() - 1) {
-                        sb.append(", ");
-                    }
-                }
-                peticionesStr = sb.toString();
-            }
-
-            // Truncar a 30 caracteres si excede
-            if (peticionesStr.length() > 30) {
-                peticionesStr = peticionesStr.substring(0, 27) + "...";
-            }
-
-            System.out.printf("║ %2d ║ %4d ║ %-12s ║ %5d ║ %7d ║ %-7s ║ %4d ║ %-30s ║%n",
+            String petStr = p.peticionesHHDDStr();
+            if (petStr.isEmpty()) petStr = " ";
+            System.out.printf("║ %2d ║ %4d ║ %-12s ║ %5d ║ %7d ║ %-7s ║ %4d ║ %-14s ║\n",
                     p.getId(),
                     p.getTiempoRestante(),
                     p.getEstado(),
@@ -129,8 +112,8 @@ public class PCB {
                     p.getBoletos(),
                     p.getUsuario(),
                     p.getVecesUsoCPU(),
-                    peticionesStr);
+                    petStr);
         }
-        System.out.println("╚════╩══════╩══════════════╩═══════╩═════════╩═════════╩══════╩════════════════════════════════╝");
+        System.out.println("╚════╩══════╩══════════════╩═══════╩═════════╩═════════╩══════╩════════════════╝");
     }
 }

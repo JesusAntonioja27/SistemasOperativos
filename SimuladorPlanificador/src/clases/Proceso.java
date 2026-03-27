@@ -1,8 +1,10 @@
 package clases;
 
-import java.util.List;
-import java.util.ArrayList;
 import ses.utils.PeticionDisco;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Random;
 
 /**
  * Representa la unidad fundamental del sistema: El Proceso.
@@ -73,8 +75,7 @@ public class Proceso {
      */
     private double proporcion;
 
-    // --- Atributos SES-HHDD ---
-    /** Lista de peticiones de disco duro pendientes para este proceso. */
+    /** Lista de peticiones de disco pendientes para procesos bloqueados. */
     private List<PeticionDisco> peticionesHHDD;
 
     /**
@@ -106,8 +107,6 @@ public class Proceso {
         this.tiempoCreacion = tiempoActual;
         this.cpuDerecho = 0.0;
         this.proporcion = 0.0;
-
-        // Inicializar lista de peticiones de disco vacía
         this.peticionesHHDD = new ArrayList<>();
     }
 
@@ -185,7 +184,39 @@ public class Proceso {
     }
 
     public void setEstado(EstadoProceso estado) {
+        // Si transiciona a BLOQUEADO y no tiene peticiones, generar automáticamente
+        if (estado == EstadoProceso.BLOQUEADO && (this.peticionesHHDD == null || this.peticionesHHDD.isEmpty())) {
+            generarPeticionesAleatorias();
+        }
         this.estado = estado;
+    }
+
+    /**
+     * Cambia el estado del proceso SIN disparar la generación automática de peticiones.
+     * Usado por SES_HHDD al marcar el proceso como LISTO después de atender sus peticiones.
+     *
+     * @param estado Nuevo estado del proceso.
+     */
+    public void setEstadoDirecto(EstadoProceso estado) {
+        this.estado = estado;
+    }
+
+    /**
+     * Genera entre 1 y 5 peticiones de disco aleatorias para este proceso.
+     * Sectores [1-20], tipo L/E aleatorio, sin sectores duplicados.
+     */
+    private void generarPeticionesAleatorias() {
+        Random rng = new Random();
+        int numPeticiones = rng.nextInt(5) + 1;
+        HashSet<Integer> sectoresUsados = new HashSet<>();
+        if (this.peticionesHHDD == null) this.peticionesHHDD = new ArrayList<>();
+        for (int j = 0; j < numPeticiones; j++) {
+            int sector;
+            do { sector = rng.nextInt(20) + 1; } while (sectoresUsados.contains(sector));
+            sectoresUsados.add(sector);
+            char tipo = rng.nextBoolean() ? 'L' : 'E';
+            this.peticionesHHDD.add(new PeticionDisco(sector, tipo, this.id));
+        }
     }
 
     public int getPrioridad() {
@@ -252,35 +283,29 @@ public class Proceso {
         this.proporcion = proporcion;
     }
 
-    // =========================================================================
-    // GETTERS Y SETTERS — SES-HHDD
-    // =========================================================================
-
-    /**
-     * Obtiene la lista de peticiones de disco duro pendientes.
-     *
-     * @return Lista de peticiones de disco.
-     */
+    /** @return Lista de peticiones de disco pendientes. */
     public List<PeticionDisco> getPeticionesHHDD() {
         return peticionesHHDD;
     }
 
-    /**
-     * Establece la lista de peticiones de disco duro pendientes.
-     *
-     * @param peticionesHHDD Nueva lista de peticiones.
-     */
+    /** @param peticionesHHDD Nueva lista de peticiones. */
     public void setPeticionesHHDD(List<PeticionDisco> peticionesHHDD) {
         this.peticionesHHDD = peticionesHHDD;
     }
 
     /**
-     * Indica si el proceso tiene peticiones de disco duro pendientes.
-     *
-     * @return true si tiene peticiones pendientes.
+     * Representación compacta de las peticiones HHDD para la tabla PCB.
+     * @return Cadena tipo "3L,14E,5E" o vacía si no hay peticiones.
      */
-    public boolean tienePeticionesHHDD() {
-        return peticionesHHDD != null && !peticionesHHDD.isEmpty();
+    public String peticionesHHDDStr() {
+        if (peticionesHHDD == null || peticionesHHDD.isEmpty()) return "";
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < peticionesHHDD.size(); i++) {
+            PeticionDisco p = peticionesHHDD.get(i);
+            sb.append(p.getSector()).append(p.getTipo());
+            if (i < peticionesHHDD.size() - 1) sb.append(",");
+        }
+        return sb.toString();
     }
 
     @Override

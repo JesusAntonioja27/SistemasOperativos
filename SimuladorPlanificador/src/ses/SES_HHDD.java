@@ -24,19 +24,22 @@ public class SES_HHDD {
     /** Posición actual de la cabeza del disco, persiste entre llamadas. */
     private static int posActualCabeza = 0;
 
-    /** Scanner compartido estático para no crear múltiples instancias. */
-    private static final Scanner scanner = new Scanner(System.in);
-
     /** Algoritmo seleccionado: -1 = no elegido aún. */
     private static int algoritmoSeleccionado = -1;
+
+    /** Scanner compartido, inyectado desde Main para evitar conflictos. */
+    private Scanner scanner;
 
     /** Generador de aleatorios para los algoritmos de disco. */
     private Random random;
 
     /**
      * Constructor del controlador SES-HHDD.
+     *
+     * @param scanner Scanner compartido de System.in (el mismo de Main).
      */
-    public SES_HHDD() {
+    public SES_HHDD(Scanner scanner) {
+        this.scanner = scanner;
         this.random = new Random();
     }
 
@@ -55,7 +58,7 @@ public class SES_HHDD {
         // Si no tiene peticiones, simplemente desbloquearlo
         if (proceso.getPeticionesHHDD().isEmpty()) {
             System.out.println("  [SES] P" + proceso.getId() + " no tiene peticiones de disco pendientes.");
-            proceso.setEstado(EstadoProceso.LISTO);
+            proceso.setEstadoDirecto(EstadoProceso.LISTO);
             System.out.println("  [SES] P" + proceso.getId() + " regresa a LISTO.");
             return true;
         }
@@ -111,9 +114,9 @@ public class SES_HHDD {
         // Actualizar posición de la cabeza para siguientes llamadas
         posActualCabeza = nuevaPos;
 
-        // Limpiar peticiones y cambiar estado
+        // Limpiar peticiones y cambiar estado (sin regenerar peticiones)
         proceso.getPeticionesHHDD().clear();
-        proceso.setEstado(EstadoProceso.LISTO);
+        proceso.setEstadoDirecto(EstadoProceso.LISTO);
 
         System.out.println("  [SES] P" + proceso.getId() + " atendido. Cabeza queda en sector "
                 + nuevaPos + ". Proceso regresa a LISTO.");
