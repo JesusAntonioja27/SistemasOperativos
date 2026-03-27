@@ -14,6 +14,9 @@ public class ParticipacionEquitativa implements AlgoritmosPlanificacion {
         List<Proceso> procesos = gp.getPcb().obtenerProcesos();
         Proceso procesoAnterior = null;
         
+        // Quantum para cada proceso (mínimo 2 ticks)
+        int quantumProceso = Math.max(2, sim.quantum);
+        
         // Agrupar procesos por usuario
         Map<String, List<Proceso>> mapaUsuarios = new HashMap<>();
         for (Proceso p : procesos) {
@@ -33,6 +36,14 @@ public class ParticipacionEquitativa implements AlgoritmosPlanificacion {
         pausa();
         
         while (sim.tiempoActual < sim.tiempoMonitoreo) {
+            
+            // Intentar desbloquear procesos bloqueados
+            List<Proceso> todos = procesos;
+            for (Proceso p : todos) {
+                if (p.getEstado() == EstadoProceso.BLOQUEADO) {
+                    gi.intentarDesbloquear(p);
+                }
+            }
             
             // Buscar siguiente usuario con procesos activos
             int intentos = 0;
@@ -75,13 +86,23 @@ public class ParticipacionEquitativa implements AlgoritmosPlanificacion {
                 continue;
             }
             
-            // Ejecutar 1 unidad (turno equitativo)
+            // Ejecutar quantum asignado (turno equitativo)
             proceso.setEstado(EstadoProceso.EN_EJECUCION);
-            System.out.println("[t=" + sim.tiempoActual + "] " + usuario + " → P" + proceso.getId());
+            int tiempoEjecucion = Math.min(quantumProceso, proceso.getTiempoRestante());
+            System.out.println("[t=" + sim.tiempoActual + "] " + usuario + " → P" + proceso.getId() + 
+                    " | Ejecutará: " + tiempoEjecucion + " ticks | TRest: " + proceso.getTiempoRestante() + 
+                    " | Prioridad: " + proceso.getPrioridad());
             
-            proceso.setTiempoRestante(proceso.getTiempoRestante() - 1);
-            proceso.setTiempoUsoCPU(proceso.getTiempoUsoCPU() + 1);
-            sim.incrementarTiempo();
+            int ticksEjecutados = 0;
+            for (int i = 0; i < tiempoEjecucion && sim.tiempoActual < sim.tiempoMonitoreo; i++) {
+                proceso.setTiempoRestante(proceso.getTiempoRestante() - 1);
+                proceso.setTiempoUsoCPU(proceso.getTiempoUsoCPU() + 1);
+                sim.incrementarTiempo();
+                ticksEjecutados++;
+                
+                System.out.println("    → [Tick " + ticksEjecutados + "] P" + proceso.getId() + 
+                        " ejecutándose | TRest: " + proceso.getTiempoRestante());
+            }
             
             if (proceso != procesoAnterior) {
                 proceso.setVecesUsoCPU(proceso.getVecesUsoCPU() + 1);
@@ -91,7 +112,7 @@ public class ParticipacionEquitativa implements AlgoritmosPlanificacion {
             
             if (proceso.getTiempoRestante() == 0) {
                 proceso.setEstado(EstadoProceso.TERMINADO);
-                System.out.println("  → P" + proceso.getId() + " TERMINADO");
+                System.out.println("  ✓ P" + proceso.getId() + " TERMINADO");
             } else {
                 proceso.setEstado(EstadoProceso.LISTO);
             }

@@ -18,6 +18,14 @@ public class LoteriaNoAprop implements AlgoritmosPlanificacion {
         
         while (sim.tiempoActual < sim.tiempoMonitoreo) {
             
+            // Intentar desbloquear procesos bloqueados
+            List<Proceso> todos = procesos;
+            for (Proceso p : todos) {
+                if (p.getEstado() == EstadoProceso.BLOQUEADO) {
+                    gi.intentarDesbloquear(p);
+                }
+            }
+            
             // 1. Encontrar procesos LISTOS
             List<Proceso> candidatos = new ArrayList<>();
             for (Proceso p : procesos) {
@@ -67,13 +75,19 @@ public class LoteriaNoAprop implements AlgoritmosPlanificacion {
             // Cambiar a EN_EJECUCION
             ganador.setEstado(EstadoProceso.EN_EJECUCION);
             System.out.println("[t=" + sim.tiempoActual + "] Ganador: P" + ganador.getId() 
-                    + " (" + ganador.getBoletos() + " boletos) → corre hasta finalizar");
+                    + " (" + ganador.getBoletos() + " boletos) entra a CPU - ejecutará " + 
+                    ganador.getTiempoRestante() + " ticks restantes");
             
             // 5. NO APROPIATIVO: ejecutar COMPLETO sin interrupciones
+            int ticksEjecutados = 0;
             while (ganador.getTiempoRestante() > 0 && sim.tiempoActual < sim.tiempoMonitoreo) {
                 ganador.setTiempoRestante(ganador.getTiempoRestante() - 1);
                 ganador.setTiempoUsoCPU(ganador.getTiempoUsoCPU() + 1);
                 sim.incrementarTiempo();
+                ticksEjecutados++;
+                
+                System.out.println("    → [Tick " + ticksEjecutados + "] P" + ganador.getId() + 
+                        " en ejecución | TRest: " + ganador.getTiempoRestante());
             }
             
             // Registrar cambio de contexto
@@ -83,7 +97,7 @@ public class LoteriaNoAprop implements AlgoritmosPlanificacion {
             // 6. Ver si terminó
             if (ganador.getTiempoRestante() == 0) {
                 ganador.setEstado(EstadoProceso.TERMINADO);
-                System.out.println("  → P" + ganador.getId() + " TERMINADO");
+                System.out.println("  ✓ P" + ganador.getId() + " TERMINADO - ejecutó " + ticksEjecutados + " ticks");
             } else {
                 ganador.setEstado(EstadoProceso.LISTO);
             }

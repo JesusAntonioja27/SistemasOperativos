@@ -23,6 +23,14 @@ public class PrioridadesNoAprop implements AlgoritmosPlanificacion {
         
         while (sim.tiempoActual < sim.tiempoMonitoreo) {
             
+            // Intentar desbloquear procesos bloqueados
+            List<Proceso> todos = gp.getPcb().obtenerProcesos();
+            for (Proceso p : todos) {
+                if (p.getEstado() == EstadoProceso.BLOQUEADO) {
+                    gi.intentarDesbloquear(p);
+                }
+            }
+            
             // Encontrar procesos LISTOS
             List<Proceso> candidatos = new ArrayList<>();
             for (Proceso p : procesos) {
@@ -69,12 +77,18 @@ public class PrioridadesNoAprop implements AlgoritmosPlanificacion {
             // Ejecutar sin apropiación (completo)
             proceso.setEstado(EstadoProceso.EN_EJECUCION);
             System.out.println("[t=" + sim.tiempoActual + "] P" + proceso.getId() +
-                    " (prioridad=" + proceso.getPrioridad() + ") corre hasta finalizar");
+                    " (prioridad=" + proceso.getPrioridad() + ") entra a CPU - ejecutará " + 
+                    proceso.getTiempoRestante() + " ticks restantes");
             
+            int ticksEjecutados = 0;
             while (proceso.getTiempoRestante() > 0 && sim.tiempoActual < sim.tiempoMonitoreo) {
                 proceso.setTiempoRestante(proceso.getTiempoRestante() - 1);
                 proceso.setTiempoUsoCPU(proceso.getTiempoUsoCPU() + 1);
                 sim.incrementarTiempo();
+                ticksEjecutados++;
+                
+                System.out.println("    → [Tick " + ticksEjecutados + "] P" + proceso.getId() + 
+                        " en ejecución | TRest: " + proceso.getTiempoRestante());
             }
             
             proceso.setVecesUsoCPU(proceso.getVecesUsoCPU() + 1);
@@ -82,7 +96,7 @@ public class PrioridadesNoAprop implements AlgoritmosPlanificacion {
             
             if (proceso.getTiempoRestante() == 0) {
                 proceso.setEstado(EstadoProceso.TERMINADO);
-                System.out.println("  → P" + proceso.getId() + " TERMINADO");
+                System.out.println("  ✓ P" + proceso.getId() + " TERMINADO - ejecutó " + ticksEjecutados + " ticks");
             } else {
                 proceso.setEstado(EstadoProceso.LISTO);
             }
